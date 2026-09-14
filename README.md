@@ -5,8 +5,8 @@ para a Lacrei Saúde. Possui CRUD, autenticação JWT, consulta ViaCEP, OpenAPI 
 ambiente Docker com PostgreSQL.
 
 **Implementado e validado:** domínio, API, segurança da aplicação, logs estruturados,
-Docker, verificações de qualidade e workflows CI/CD. **Pendente:** execução dos
-workflows no GitHub e implantação real em AWS.
+Docker, verificações de qualidade e CI no GitHub (lint, testes PostgreSQL e build).
+**Pendente:** implantação real em AWS e validação do fluxo de deploy.
 
 ## Início rápido com Docker
 
@@ -368,7 +368,7 @@ sobreviveu à recriação do container do banco. Dados de teste foram removidos.
 | ViaCEP separado do cadastro | Permitir operação manual quando o provedor falha. |
 | JWT com rotação | Acesso curto e revogação do refresh, sem cadastro público. |
 
-**CI/CD implementado nos workflows, execução no GitHub pendente:**
+**CI validado no GitHub; deploy AWS não executado:**
 [Pipeline](.github/workflows/pipeline.yml) executa lint → testes PostgreSQL 17 →
 build Docker. PRs não recebem credenciais AWS. Relatórios de cobertura/OpenAPI
 ficam disponíveis por sete dias; a imagem do build, por três dias.
@@ -422,8 +422,10 @@ deploy, verificar a tarefa de migration no ECS e aguardar seu término.
 
 Validação local: sintaxe dos workflows com actionlint, comandos de qualidade em
 cópia limpa sem `.env` ou estáticos pré-gerados (configuração via ambiente),
-regressões de promoção/shell e build Docker. Execução hospedada, OIDC, migrations no ECS e rollout AWS ainda não
-foram executados; exigem repositório remoto e infraestrutura configurados.
+regressões de promoção/shell e build Docker. Em 14/09/2026, a [execução 34841429543](https://github.com/Renatoxdev/elo-saude/actions/runs/34841429543)
+concluiu lint, testes PostgreSQL e build Docker com sucesso no GitHub. Staging e
+production foram ignorados porque o deploy AWS está desativado. OIDC, migrations
+no ECS e rollout AWS continuam não executados; exigem infraestrutura configurada.
 Referências: [PostgreSQL em Actions](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers)
 e [ação oficial de deploy ECS](https://github.com/aws-actions/amazon-ecs-deploy-task-definition).
 

@@ -7,9 +7,10 @@ A conta AWS não pôde ser ativada; staging e production não foram publicados.
 Não foram executados OIDC, migrations no ECS, rollout, rollback nem restauração RDS.
 Não há templates Terraform/CloudFormation nesta entrega.
 
-Docker, API e testes foram validados localmente. Os workflows GitHub Actions
-estão implementados e tiveram validação local; sua execução hospedada continua
-pendente. Para avaliar a aplicação sem AWS, seguir o início rápido do
+Docker, API e testes foram validados localmente. O CI também passou no GitHub
+em 14/09/2026: lint, testes PostgreSQL e build Docker na [execução 34841429543](https://github.com/Renatoxdev/elo-saude/actions/runs/34841429543).
+Os jobs staging e production foram ignorados; o fluxo de deploy AWS permanece
+sem execução real. Para avaliar a aplicação sem AWS, seguir o início rápido do
 [README](../README.md). Manter `AWS_DEPLOY_ENABLED` ausente ou `false`.
 
 ## Escolha de arquitetura
