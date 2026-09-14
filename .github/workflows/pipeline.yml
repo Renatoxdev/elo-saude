@@ -1,0 +1,148 @@
+name: Pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      production:
+        description: Promover para produção após validar staging (executar em main)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: pipeline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  POETRY_VERSION: '2.4.3'
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+      - run: pipx install "poetry==$POETRY_VERSION"
+      - run: poetry install --no-root --no-interaction
+      - run: poetry check --lock
+      - run: poetry run ruff check .
+      - run: poetry run ruff format --check .
+      - run: poetry run python -m unittest discover -s scripts/tests
+
+  tests:
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: elo_saude_ci
+          POSTGRES_USER: elo_saude_ci
+          # Senha descartável, exclusiva do banco isolado deste job.
+          POSTGRES_PASSWORD: ci-disposable-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U elo_saude_ci -d elo_saude_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.local
+      DJANGO_DEBUG: 'false'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      POSTGRES_DB: elo_saude_ci
+      POSTGRES_USER: elo_saude_ci
+      POSTGRES_PASSWORD: ci-disposable-password
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: '5432'
+      POSTGRES_SSLMODE: disable
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+      - run: pipx install "poetry==$POETRY_VERSION"
+      - run: poetry install --no-root --no-interaction
+      - name: Gerar chaves efêmeras de teste
+        run: |
+          python - <<'PY'
+          import os, secrets
+          with open(os.environ['GITHUB_ENV'], 'a') as stream:
+              for name in ('DJANGO_SECRET_KEY', 'DJANGO_JWT_SIGNING_KEY'):
+                  value = secrets.token_urlsafe(64)
+                  print(f'::add-mask::{value}')
+                  stream.write(f'{name}={value}\n')
+          PY
+      - run: poetry run python manage.py migrate --noinput
+      - run: make quality
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: quality-reports
+          path: |
+            coverage.xml
+            htmlcov/
+            artifacts/openapi.yaml
+          if-no-files-found: error
+          retention-days: 7
+
+  build:
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Construir imagem validada
+        run: |
+          docker build --tag elo-saude-api:ci .
+          test "$(docker image inspect elo-saude-api:ci --format '{{.Config.User}}')" = '10001:10001'
+          docker run --rm --entrypoint python elo-saude-api:ci -c \
+            'import django, gunicorn; from pathlib import Path; assert not Path("/app/.env").exists(); assert Path("/app/staticfiles/staticfiles.json").is_file()'
+          docker save elo-saude-api:ci | gzip > image.tar.gz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: container-image
+          path: image.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 3
+
+  staging:
+    needs: build
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      vars.AWS_DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+
+  production:
+    needs: staging
+    if: github.event_name == 'workflow_dispatch' && inputs.production && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+      image: ${{ needs.staging.outputs.image }}
