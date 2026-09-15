@@ -4,6 +4,8 @@
 !poetry.lock
 !poetry.toml
 !gunicorn.conf.py
+!scripts/
+!scripts/start_render.sh
 !config/
 !config/**
 !core/
