@@ -1,0 +1,395 @@
+{
+  "environment": "staging",
+  "service_id": "srv-dakn502d0e5s73a1gv50",
+  "phases": [
+    {
+      "phase": "baseline",
+      "timestamp": "2026-09-16T15:44:40.334644+00:00",
+      "deploy_id": "dep-dal85pdbedkc73bk0k90",
+      "commit": "e1fc9bbef8c3919e1f90240ece3c81084753d105",
+      "status": "live",
+      "checks": [
+        {
+          "method": "GET",
+          "path": "/health/live/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:45:45.402170+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/health/ready/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:45:47.052047+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/docs/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:45:47.797631+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/schema/",
+          "status": 200,
+          "expected": 200,
+          "timestamp": "2026-09-16T15:45:49.052499+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/",
+          "expected": 401,
+          "status": 401,
+          "timestamp": "2026-09-16T15:45:49.924914+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:45:53.691824+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/professionals/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:45:57.329089+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/2/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:45:59.120110+00:00"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/professionals/2/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:46:02.656301+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/appointments/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:46:05.202090+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/appointments/?professional_id=2",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:46:08.397853+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/2/",
+          "expected": 409,
+          "status": 409,
+          "timestamp": "2026-09-16T15:46:11.947034+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/appointments/2/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:46:15.125763+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/2/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:46:18.827329+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/revoke/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:46:22.715978+00:00"
+        }
+      ],
+      "passed": true,
+      "deploy_finished_at": "2026-09-16T11:53:09.137057Z"
+    },
+    {
+      "phase": "rollback",
+      "timestamp": "2026-09-16T15:47:37.385195+00:00",
+      "deploy_id": "dep-dalbjjjm8hqs73907eu0",
+      "commit": "bd5f91e749bd2babb83b1b465f659109fcc7055d",
+      "status": "live",
+      "checks": [
+        {
+          "method": "GET",
+          "path": "/health/live/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:38.009256+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/health/ready/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:39.685876+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/docs/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:40.266079+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/schema/",
+          "status": 200,
+          "expected": 200,
+          "timestamp": "2026-09-16T15:47:42.425065+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/",
+          "expected": 401,
+          "status": 401,
+          "timestamp": "2026-09-16T15:47:42.645927+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:46.955203+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/professionals/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:47:50.639131+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/3/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:53.679457+00:00"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/professionals/3/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:47:56.048269+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/appointments/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:47:59.789547+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/appointments/?professional_id=3",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:48:03.279297+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/3/",
+          "expected": 409,
+          "status": 409,
+          "timestamp": "2026-09-16T15:48:06.568610+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/appointments/3/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:48:09.856495+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/3/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:48:12.448097+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/revoke/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:48:16.322385+00:00"
+        }
+      ],
+      "passed": true,
+      "deploy_finished_at": "2026-09-16T15:47:32.537444Z"
+    },
+    {
+      "phase": "restored",
+      "timestamp": "2026-09-16T15:49:31.995072+00:00",
+      "deploy_id": "dep-dalbkg740ujc73decg00",
+      "commit": "e1fc9bbef8c3919e1f90240ece3c81084753d105",
+      "status": "live",
+      "checks": [
+        {
+          "method": "GET",
+          "path": "/health/live/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:32.255007+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/health/ready/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:34.304146+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/docs/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:34.568597+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/schema/",
+          "status": 200,
+          "expected": 200,
+          "timestamp": "2026-09-16T15:49:35.303558+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/",
+          "expected": 401,
+          "status": 401,
+          "timestamp": "2026-09-16T15:49:36.725291+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:40.821165+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/professionals/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:49:44.379865+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/professionals/4/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:46.204560+00:00"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/v1/professionals/4/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:49.761079+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/appointments/",
+          "expected": 201,
+          "status": 201,
+          "timestamp": "2026-09-16T15:49:53.514803+00:00"
+        },
+        {
+          "method": "GET",
+          "path": "/api/v1/appointments/?professional_id=4",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:49:56.763725+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/4/",
+          "expected": 409,
+          "status": 409,
+          "timestamp": "2026-09-16T15:50:00.261573+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/appointments/4/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:50:03.411366+00:00"
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/v1/professionals/4/",
+          "expected": 204,
+          "status": 204,
+          "timestamp": "2026-09-16T15:50:06.011861+00:00"
+        },
+        {
+          "method": "POST",
+          "path": "/api/v1/auth/token/revoke/",
+          "expected": 200,
+          "status": 200,
+          "timestamp": "2026-09-16T15:50:09.831816+00:00"
+        }
+      ],
+      "passed": true,
+      "deploy_finished_at": "2026-09-16T15:49:21.991931Z"
+    }
+  ],
+  "digest": "not exposed by Git-backed service; not measured",
+  "current": {
+    "id": "dep-dal85pdbedkc73bk0k90",
+    "commit": {
+      "id": "e1fc9bbef8c3919e1f90240ece3c81084753d105",
+      "message": "Documenta produ\u00e7\u00e3o validada e CI/CD Render conclu\u00eddo",
+      "createdAt": "2026-09-16T11:49:05Z"
+    },
+    "finishedAt": "2026-09-16T11:53:09.137057Z"
+  },
+  "previous": {
+    "id": "dep-dal0vvm7bikc73dvsvk0",
+    "commit": {
+      "id": "bd5f91e749bd2babb83b1b465f659109fcc7055d",
+      "message": "Automatiza deploy Render de staging e produ\u00e7\u00e3o por commit",
+      "createdAt": "2026-09-16T03:34:34Z"
+    },
+    "finishedAt": "2026-09-16T03:43:02.218948Z"
+  },
+  "operations": [
+    {
+      "target": "dep-dal0vvm7bikc73dvsvk0",
+      "deploy_id": "dep-dalbjjjm8hqs73907eu0",
+      "requested_at": "2026-09-16T15:46:23.719244+00:00"
+    },
+    {
+      "target": "dep-dal85pdbedkc73bk0k90",
+      "deploy_id": "dep-dalbkg740ujc73decg00",
+      "requested_at": "2026-09-16T15:48:17.277597+00:00"
+    }
+  ],
+  "temporary_data_removed": true,
+  "finished_at": "2026-09-16T15:50:10.151588+00:00",
+  "restored": true,
+  "automation_restored": true,
+  "production_unchanged": {
+    "deploy_id": "dep-dal10kdg1s2s73drtogg",
+    "commit": "bd5f91e749bd2babb83b1b465f659109fcc7055d",
+    "status": "live",
+    "method": "read-only Render metadata; no production HTTP smoke"
+  }
+}

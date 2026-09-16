@@ -64,7 +64,9 @@ o mesmo SHA do GitHub. PRs não executam deploy nem recebem credenciais Render.
 O Render reconstrói o Dockerfile para cada serviço a partir desse SHA: a promoção
 é do mesmo código, não do mesmo digest da imagem construída pelo CI. Dependências
 Python estão travadas no lockfile, mas a imagem base pode mudar entre builds.
-Promoção de imagem por digest permanece uma evolução possível; não é alegada aqui.
+A [avaliação de promoção por digest](OPERATIONS.md#imagem-única-decisão-e-migração-proposta)
+detalha a alternativa image-backed/GHCR e os motivos para preservar os serviços atuais.
+Essa migração não foi implantada; nenhum digest é alegado para os deploys atuais.
 
 Configuração no GitHub:
 
@@ -103,6 +105,10 @@ CI usam seu PostgreSQL separado. Não substituir o `.env` local sem guardar sua
 configuração; preferir variáveis injetadas apenas no processo administrativo.
 
 ## Rollback
+
+O [ensaio executado em staging](ROLLBACK_STAGING.md) contém as evidências reais.
+O [runbook operacional](OPERATIONS.md) detalha verificações, retorno seguro,
+monitoramento, backup/restauração e escalabilidade.
 
 1. Desativar `RENDER_DEPLOY_ENABLED` no GitHub e verificar execuções em andamento,
    para não disputar com uma publicação automática. Auto-Deploy deve continuar Off.
