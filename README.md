@@ -6,15 +6,17 @@ ambiente Docker com PostgreSQL.
 
 **Implementado e validado:** domínio, API, segurança da aplicação, logs estruturados,
 Docker, verificações de qualidade e CI no GitHub (lint, testes PostgreSQL e build).
-**Staging publicado no Render:** fluxo autenticado validado por HTTPS.
-**Render:** configuração de produção e automação em validação.
+**Staging e produção publicados no Render:** fluxos autenticados validados por HTTPS.
+**Automação Render:** validada no GitHub, incluindo deploy de staging e produção.
 Veja o [guia de implantação, CI/CD e rollback no Render](architecture/RENDER.md).
 A arquitetura AWS permanece como proposta.
 
-## Staging para avaliação
+## Ambientes para avaliação
 
-- [Swagger](https://elo-saude-staging.onrender.com/api/docs/)
-- [Readiness](https://elo-saude-staging.onrender.com/health/ready/)
+| Ambiente | Documentação | Healthcheck |
+|---|---|---|
+| Staging | [Swagger](https://elo-saude-staging.onrender.com/api/docs/) | [Readiness](https://elo-saude-staging.onrender.com/health/ready/) |
+| Produção | [Swagger](https://elo-saude-production.onrender.com/api/docs/) | [Readiness](https://elo-saude-production.onrender.com/health/ready/) |
 
 Em 15/09/2026, foram verificados por HTTPS: readiness com resposta 200 e
 `{"status":"ok"}`, Swagger com resposta 200 e listagem de profissionais sem token
@@ -24,6 +26,12 @@ profissional, payload inválido, conflito de agenda, exclusão protegida e rejei
 de refresh revogado. O banco remoto usa PostgreSQL 18.6; CI usa PostgreSQL 17.
 Usuário, registros e tokens temporários foram removidos ao final. Essas verificações
 complementam a suíte automatizada; não são teste de carga. Não há credenciais públicas.
+
+Em 16/09/2026, produção passou por 23 verificações HTTP: healthcheck, Swagger,
+autenticação, CRUD completo, filtro, validações de erro e revogação. Dados e usuário
+temporários foram removidos. Foi confirmado que os ambientes têm hosts PostgreSQL,
+senhas e chaves Django/JWT distintos. Produção também usa PostgreSQL 18.6.
+
 O plano gratuito pode suspender o serviço por inatividade e atrasar o primeiro acesso.
 
 ## Início rápido com Docker
@@ -301,8 +309,8 @@ make quality
 
 Resultado em 12/09/2026: **71 testes aprovados e 97,20% de cobertura combinada de
 linhas e ramificações**, no escopo descrito abaixo. Esse comando falha se alguma
-etapa falhar. Há também três testes de regressão dos workflows, fora do percentual
-de cobertura da aplicação. Atalhos individuais:
+etapa falhar. Há também oito testes de regressão dos workflows e do cliente de
+deploy Render, fora do percentual de cobertura da aplicação. Atalhos individuais:
 
 | Comando | Verificação/artefato |
 |---|---|
@@ -390,81 +398,36 @@ A configuração ECS/AWS abaixo é alternativa e permanece desativada.
 | ViaCEP separado do cadastro | Permitir operação manual quando o provedor falha. |
 | JWT com rotação | Acesso curto e revogação do refresh, sem cadastro público. |
 
-**CI validado no GitHub; deploy AWS não executado:**
-[Pipeline](.github/workflows/pipeline.yml) executa lint → testes PostgreSQL 17 →
-build Docker. PRs não recebem credenciais AWS. Relatórios de cobertura/OpenAPI
-ficam disponíveis por sete dias; a imagem do build, por três dias.
+**CI/CD Render:** o [Pipeline](.github/workflows/pipeline.yml) encadeia lint,
+testes com PostgreSQL e build Docker antes do deploy em staging. Produção exige
+execução manual em `main` com `production=true` e só prossegue depois de staging
+passar. Ambos os serviços recebem o mesmo commit validado; Render reconstrói a
+imagem em cada ambiente, portanto não se afirma promoção do mesmo digest Docker.
 
-O [deploy reutilizável](.github/workflows/deploy.yml) usa OIDC, publica o build no
-ECR e referencia a imagem por digest. Executa migrations em uma tarefa Fargate,
-confere seu sucesso e só então atualiza o serviço. Aguarda estabilidade e confirma
-que a revisão esperada está ativa, para não confundir rollback automático com sucesso.
+O [workflow de deploy](.github/workflows/deploy-render.yml) verifica repositório,
+branch e Auto-Deploy desativado, aguarda o deploy ficar Live, confere o SHA e testa
+a conexão do banco pelo readiness. Falhas impedem a promoção. PRs executam apenas
+validações. A chave Render fica em GitHub Secrets; bancos e chaves da aplicação
+ficam nas variáveis de cada serviço. Environments são restritos a `main`.
 
-Para habilitar deploy, primeiro provisionar AWS e configurar GitHub Environments
-`staging` e `production`. Em cada ambiente, definir estas **Variables**:
+Configuração para reproduzir, variáveis, limites do plano gratuito e instruções
+operacionais estão no [guia Render](architecture/RENDER.md). Em 16/09/2026, a
+[execução 35052382786](https://github.com/Renatoxdev/elo-saude/actions/runs/35052382786)
+concluiu lint, 71 testes da aplicação, oito testes auxiliares, build e deploys de
+staging e produção com sucesso. O fluxo publicou o commit `bd5f91e` nos dois
+ambientes e confirmou readiness. Cobertura da aplicação: 97,20%.
 
-| Variável | Valor esperado |
-|---|---|
-| `AWS_REGION` | Região do ambiente. |
-| `AWS_ROLE_ARN` | Role de deploy assumida via OIDC, restrita ao repositório e Environment. |
-| `ECR_REPOSITORY` | Nome do repositório ECR, com tags imutáveis. |
-| `ECS_CLUSTER` / `ECS_SERVICE` | Cluster e serviço ECS existentes. |
-| `ECS_TASK_DEFINITION` | ARN completo com revisão de uma task definition base do ambiente. |
-| `ECS_SUBNETS` / `ECS_SECURITY_GROUPS` | IDs separados por vírgulas; subnets privadas com acesso aos serviços AWS. |
+**Rollback Render:** desativar temporariamente a automação, selecionar um deploy
+anterior bem-sucedido no painel Render e conferir commit, configurações e saúde
+após restauração. O procedimento completo está no [guia](architecture/RENDER.md#rollback).
+Rollback da aplicação não desfaz migrations; o banco deve continuar compatível
+com a versão anterior. Restauração de dados exige procedimento próprio. Não foi
+executado ensaio de rollback/restauração remota nesta entrega.
 
-A task definition precisa de um container essencial chamado `api`, arquitetura
-Linux/x86_64, logs CloudWatch, settings do ambiente, conexão RDS com TLS e secrets
-referenciados pelo Secrets Manager. O serviço deve usar controller `ECS`, healthcheck
-no ALB e deployment circuit breaker com rollback. O banco deve aceitar a conexão
-da tarefa de migration; ela usa a mesma configuração de rede e secrets da API.
-A task definition base deve ser atualizada explicitamente quando a configuração
-mudar; o workflow altera apenas a imagem. Não colocar valores de secrets nas Variables.
-
-Staging e produção promovem o mesmo digest do ECR: o execution role de produção
-precisa conseguir ler o repositório usado em staging, inclusive em contas distintas.
-A role de CI precisa de permissões limitadas para ECR, leitura/registro de task
-definitions, RunTask/DescribeTasks, DescribeServices/UpdateService e PassRole apenas
-para as roles ECS necessárias. A política exata será definida com a infraestrutura.
-
-Proteger `production` com aprovação obrigatória, impedir autoaprovação e restringir
-ambos os ambientes à branch `main`. Configurar a confiança OIDC para o Environment
-correspondente e exigir lint/tests/build na proteção da branch. Essas proteções são
-configurações do GitHub e **não são criadas pelo YAML**.
-
-Depois disso, definir a Variable do **repositório** `AWS_DEPLOY_ENABLED=true`.
-Enquanto ausente, CI roda e deploy é ignorado. Push em `main` publica em staging.
-Para produção, executar manualmente `Pipeline` na branch `main` com `production`
-marcado: a execução repete as validações, publica em staging e promove esse mesmo
-digest após a aprovação de produção. Não promove imagens arbitrárias nem refaz o
-build entre ambientes. Produção rejeita digest ausente ou malformado antes de
-obter credenciais AWS; não há fallback para publicação de uma nova imagem.
-Deploys não são cancelados automaticamente durante migrations. Um cancelamento
-manual ou timeout do job não garante que a tarefa ECS pare: antes de repetir um
-deploy, verificar a tarefa de migration no ECS e aguardar seu término.
-
-Validação local: sintaxe dos workflows com actionlint, comandos de qualidade em
-cópia limpa sem `.env` ou estáticos pré-gerados (configuração via ambiente),
-regressões de promoção/shell e build Docker. Em 14/09/2026, a [execução 34841429543](https://github.com/Renatoxdev/elo-saude/actions/runs/34841429543)
-concluiu lint, testes PostgreSQL e build Docker com sucesso no GitHub. Staging e
-production foram ignorados porque o deploy AWS está desativado. OIDC, migrations
-no ECS e rollout AWS continuam não executados; exigem infraestrutura configurada.
-Referências: [PostgreSQL em Actions](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers)
-e [ação oficial de deploy ECS](https://github.com/aws-actions/amazon-ecs-deploy-task-definition).
-
-**Limitação da entrega:** não foi possível ativar uma conta AWS. Os ambientes
-staging e production não foram publicados na AWS; OIDC e deploy ECS não foram
-validados. Staging foi publicado no Render, conforme a seção de avaliação acima.
-A [arquitetura AWS e o roteiro de implantação/rollback](architecture/AWS.md)
-descrevem os componentes, o isolamento e as verificações pendentes. Trata-se de
-um projeto de arquitetura, sem provisionamento ou templates de infraestrutura.
-
-**AWS proposta, sem recursos criados:** ECR, ECS/Fargate, ALB com HTTPS, RDS privado,
-CloudWatch e Secrets Manager, separados por ambiente. Região, orçamento, domínio,
-credenciais e configuração de rede ainda precisam ser definidos.
-
-**Rollback proposto, não executado:** retornar à revisão/imagem anterior do serviço.
-Migrations devem manter compatibilidade durante a transição. Voltar a aplicação
-não desfaz o banco; restauração e correções de dados exigem procedimentos próprios.
+**Alternativa AWS, não provisionada:** a conta AWS não pôde ser ativada. O
+[desenho AWS](architecture/AWS.md) apresenta ECS/Fargate, ECR, ALB, RDS e OIDC com
+isolamento por ambiente. Os workflows AWS permanecem desativados. A entrega usa
+Render e Neon como serviços equivalentes, sem alegar execução de recursos AWS.
 
 **Asaas futura, não implementada:** módulo de pagamentos separado do domínio,
 com criação de cobrança/split, cliente com timeouts, registro de eventos de webhook
@@ -472,8 +435,9 @@ e processamento idempotente. Autenticação do webhook, retries e reconciliaçã
 cobranças após timeout serão definidos com a documentação oficial na etapa da integração.
 Nenhuma cobrança real ou mock de pagamento foi criado.
 
-Ainda faltam implantação real, políticas de proxy/cache compartilhado, monitoramento,
-backup/restauração e auditoria final. Não considerar a solução pronta para produção.
+Para operação comercial, ainda faltam cache/throttling compartilhados, monitoramento,
+validação de backup/restauração e dimensionamento de disponibilidade. Os ambientes
+publicados demonstram o desafio; não representam uma operação com SLA comercial.
 
 
 ## Problemas encontrados e resolvidos

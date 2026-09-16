@@ -9,9 +9,10 @@
 
 Os ambientes usam chaves Django/JWT, credenciais e bancos separados. Não compartilham
 dados. Staging passou por 21 verificações HTTPS autenticadas em 15/09/2026, com
-remoção dos dados temporários. A validação final de produção e do pipeline Render
-será registrada no README após execução; a existência da configuração não comprova
-que um deploy passou. Não há credenciais de avaliação públicas.
+remoção dos dados temporários. Produção passou por 23 verificações HTTPS em
+16/09/2026, também com remoção dos dados e usuário temporários. O pipeline Render foi validado no GitHub na [execução 35052382786](https://github.com/Renatoxdev/elo-saude/actions/runs/35052382786):
+lint, testes, build, staging e produção passaram, publicando o mesmo commit
+`bd5f91e` e confirmando readiness em ambos os ambientes. Não há credenciais de avaliação públicas.
 
 ```mermaid
 flowchart LR
