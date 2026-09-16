@@ -128,7 +128,7 @@ jobs:
     needs: build
     if: >-
       github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
-      vars.AWS_DEPLOY_ENABLED == 'true'
+      vars.AWS_DEPLOY_ENABLED == 'true' && vars.RENDER_DEPLOY_ENABLED != 'true'
     permissions:
       contents: read
       id-token: write
@@ -146,3 +146,23 @@ jobs:
     with:
       environment: production
       image: ${{ needs.staging.outputs.image }}
+
+  render-staging:
+    needs: build
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name != 'pull_request' &&
+      vars.RENDER_DEPLOY_ENABLED == 'true'
+    uses: ./.github/workflows/deploy-render.yml
+    with:
+      environment: staging
+    secrets:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
+  render-production:
+    needs: render-staging
+    if: github.event_name == 'workflow_dispatch' && inputs.production && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-render.yml
+    with:
+      environment: production
+    secrets:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}

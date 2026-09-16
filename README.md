@@ -6,7 +6,25 @@ ambiente Docker com PostgreSQL.
 
 **Implementado e validado:** domínio, API, segurança da aplicação, logs estruturados,
 Docker, verificações de qualidade e CI no GitHub (lint, testes PostgreSQL e build).
-**Pendente:** implantação real em AWS e validação do fluxo de deploy.
+**Staging publicado no Render:** fluxo autenticado validado por HTTPS.
+**Render:** configuração de produção e automação em validação.
+Veja o [guia de implantação, CI/CD e rollback no Render](architecture/RENDER.md).
+A arquitetura AWS permanece como proposta.
+
+## Staging para avaliação
+
+- [Swagger](https://elo-saude-staging.onrender.com/api/docs/)
+- [Readiness](https://elo-saude-staging.onrender.com/health/ready/)
+
+Em 15/09/2026, foram verificados por HTTPS: readiness com resposta 200 e
+`{"status":"ok"}`, Swagger com resposta 200 e listagem de profissionais sem token
+com resposta 401. Também passaram 21 verificações HTTP no staging: login JWT,
+criação/leitura/atualização/exclusão de profissionais e consultas, filtro por
+profissional, payload inválido, conflito de agenda, exclusão protegida e rejeição
+de refresh revogado. O banco remoto usa PostgreSQL 18.6; CI usa PostgreSQL 17.
+Usuário, registros e tokens temporários foram removidos ao final. Essas verificações
+complementam a suíte automatizada; não são teste de carga. Não há credenciais públicas.
+O plano gratuito pode suspender o serviço por inatividade e atrasar o primeiro acesso.
 
 ## Início rápido com Docker
 
@@ -357,6 +375,10 @@ sobreviveu à recriação do container do banco. Dados de teste foram removidos.
 
 ## Decisões técnicas e próximos passos
 
+O ambiente de avaliação usa **Render + Neon**, com procedimento de setup,
+variáveis, promoção e rollback no [guia Render](architecture/RENDER.md).
+A configuração ECS/AWS abaixo é alternativa e permanece desativada.
+
 | Decisão | Justificativa |
 |---|---|
 | Monólito Django | Arquitetura pequena e explicável, sem abstrações prematuras. |
@@ -430,7 +452,8 @@ Referências: [PostgreSQL em Actions](https://docs.github.com/en/actions/tutoria
 e [ação oficial de deploy ECS](https://github.com/aws-actions/amazon-ecs-deploy-task-definition).
 
 **Limitação da entrega:** não foi possível ativar uma conta AWS. Os ambientes
-staging e production não foram publicados; OIDC e deploy real não foram validados.
+staging e production não foram publicados na AWS; OIDC e deploy ECS não foram
+validados. Staging foi publicado no Render, conforme a seção de avaliação acima.
 A [arquitetura AWS e o roteiro de implantação/rollback](architecture/AWS.md)
 descrevem os componentes, o isolamento e as verificações pendentes. Trata-se de
 um projeto de arquitetura, sem provisionamento ou templates de infraestrutura.
