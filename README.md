@@ -8,7 +8,9 @@ ambiente Docker com PostgreSQL.
 Docker, verificações de qualidade e CI no GitHub (lint, testes PostgreSQL e build).
 **Staging e produção publicados no Render:** fluxos autenticados validados por HTTPS.
 **Automação Render:** validada no GitHub, incluindo deploy de staging e produção.
-Veja o [guia de implantação, CI/CD e rollback no Render](architecture/RENDER.md).
+Veja o [guia de implantação, CI/CD e rollback no Render](architecture/RENDER.md)
+e o [runbook operacional](architecture/OPERATIONS.md), com estratégia de imagem única,
+monitoramento, backup/restore e cache distribuído.
 A arquitetura AWS permanece como proposta.
 
 ## Ambientes para avaliação
@@ -421,19 +423,20 @@ ambientes e confirmou readiness. Cobertura da aplicação: 97,20%.
 anterior bem-sucedido no painel Render e conferir commit, configurações e saúde
 após restauração. O procedimento completo está no [guia](architecture/RENDER.md#rollback).
 Rollback da aplicação não desfaz migrations; o banco deve continuar compatível
-com a versão anterior. Restauração de dados exige procedimento próprio. Não foi
-executado ensaio de rollback/restauração remota nesta entrega.
+com a versão anterior. Restauração de dados exige procedimento próprio. O
+[ensaio controlado em staging](architecture/ROLLBACK_STAGING.md) registra versões,
+deploys, horários e validação funcional antes/depois, com retorno à versão inicial.
+Não foi realizada restauração de banco nem rollback de produção.
 
 **Alternativa AWS, não provisionada:** a conta AWS não pôde ser ativada. O
 [desenho AWS](architecture/AWS.md) apresenta ECS/Fargate, ECR, ALB, RDS e OIDC com
 isolamento por ambiente. Os workflows AWS permanecem desativados. A entrega usa
 Render e Neon como serviços equivalentes, sem alegar execução de recursos AWS.
 
-**Asaas futura, não implementada:** módulo de pagamentos separado do domínio,
-com criação de cobrança/split, cliente com timeouts, registro de eventos de webhook
-e processamento idempotente. Autenticação do webhook, retries e reconciliação de
-cobranças após timeout serão definidos com a documentação oficial na etapa da integração.
-Nenhuma cobrança real ou mock de pagamento foi criado.
+**Asaas futura, não implementada:** a [proposta técnica](architecture/ASAAS.md)
+descreve adapter, ordem interna, reconciliação após timeout, webhook autenticado,
+eventos idempotentes e cenários de teste. Nenhuma cobrança real ou mock executável
+foi criado; a evolução começa no sandbox após definir as regras de negócio.
 
 Para operação comercial, ainda faltam cache/throttling compartilhados, monitoramento,
 validação de backup/restauração e dimensionamento de disponibilidade. Os ambientes
